@@ -59,9 +59,9 @@ func (b *AVLBalancer) Join(left, right Node) Node {
 // balance acts as the rotation mechanism, similar to the legacy balance.go logic
 func (b *AVLBalancer) balance(l, r Node) Node {
 	const diffThreshold = 1
-	dDiff := l.Depth() - r.Depth()
+	depthDiff := l.Depth() - r.Depth()
 
-	if dDiff > diffThreshold {
+	if depthDiff > diffThreshold {
 		lC, ok := l.(*Concat)
 		if !ok {
 			return NewConcat(l, r)
@@ -79,7 +79,7 @@ func (b *AVLBalancer) balance(l, r Node) Node {
 		}
 		// Single rotation (Right rotation)
 		return NewConcat(lC.Left, NewConcat(lC.Right, r))
-	} else if dDiff < -diffThreshold {
+	} else if depthDiff < -diffThreshold {
 		rC, ok := r.(*Concat)
 		if !ok {
 			return NewConcat(l, r)
