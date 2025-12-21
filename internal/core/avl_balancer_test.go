@@ -22,7 +22,7 @@ func TestAVLBalancer_Join_Basic(t *testing.T) {
 		t.Errorf("Expected length 400, got %d", n.Len())
 	}
 	if n.Depth() != 1 {
-		t.Errorf("Expected depth 1 (1+max(0,0)), got %d", n.Depth())
+		t.Errorf("Expected depth 1, got %d", n.Depth())
 	}
 }
 
