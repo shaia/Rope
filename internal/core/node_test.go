@@ -135,3 +135,110 @@ func TestTryMergeLeaves(t *testing.T) {
 		t.Error("Expected false (no merge) for large strings")
 	}
 }
+
+func TestConcat_Len(t *testing.T) {
+	l1 := NewLeaf("hello")
+	l2 := NewLeaf(" world")
+	c := NewConcat(l1, l2)
+
+	if got := c.Len(); got != 11 {
+		t.Errorf("Len() = %d, want 11", got)
+	}
+}
+
+func TestConcat_Depth(t *testing.T) {
+	l1 := NewLeaf("a")
+	l2 := NewLeaf("b")
+	// l1, l2 depth = 0
+	// c depth = 1 + max(0,0) = 1
+	c := NewConcat(l1, l2)
+	if d := c.Depth(); d != 1 {
+		t.Errorf("Depth() = %d, want 1", d)
+	}
+
+	l3 := NewLeaf("c")
+	// c2 depth = 1 + max(c.Depth(), l3.Depth()) = 1 + max(1, 0) = 2
+	c2 := NewConcat(c, l3)
+	if d := c2.Depth(); d != 2 {
+		t.Errorf("Depth() = %d, want 2", d)
+	}
+}
+
+func TestConcat_String(t *testing.T) {
+	l1 := NewLeaf("foo")
+	l2 := NewLeaf("bar")
+	c := NewConcat(l1, l2)
+
+	if got := c.String(); got != "foobar" {
+		t.Errorf("String() = %q, want \"foobar\"", got)
+	}
+}
+
+func TestConcat_ByteAt(t *testing.T) {
+	l1 := NewLeaf("ABC")
+	l2 := NewLeaf("DEF")
+	c := NewConcat(l1, l2)
+
+	tests := []struct {
+		idx  int
+		want byte
+	}{
+		{0, 'A'},
+		{2, 'C'},
+		{3, 'D'},
+		{5, 'F'},
+	}
+
+	for _, tt := range tests {
+		if got := c.ByteAt(tt.idx); got != tt.want {
+			t.Errorf("ByteAt(%d) = %c, want %c", tt.idx, got, tt.want)
+		}
+	}
+}
+
+func TestConcat_Slice(t *testing.T) {
+	// Setup: "01234" + "56789" = "0123456789"
+	l1 := NewLeaf("01234")
+	l2 := NewLeaf("56789")
+	c := NewConcat(l1, l2) // length 10, split at 5
+
+	tests := []struct {
+		name       string
+		start, end int
+		want       string
+	}{
+		{"full slice", 0, 10, "0123456789"},
+		{"left only", 0, 5, "01234"},
+		{"left subset", 1, 4, "123"},
+		{"right only", 5, 10, "56789"},
+		{"right subset", 6, 9, "678"},
+		{"spanning", 3, 7, "3456"},
+		{"spanning start", 0, 7, "0123456"},
+		{"spanning end", 3, 10, "3456789"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := c.Slice(tt.start, tt.end)
+			if node.String() != tt.want {
+				t.Errorf("Slice(%d, %d) = %q, want %q", tt.start, tt.end, node.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestConcat_MarshalJSON(t *testing.T) {
+	l1 := NewLeaf("hello")
+	l2 := NewLeaf(" world")
+	c := NewConcat(l1, l2)
+
+	b, err := c.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	want := `"hello world"`
+	if string(b) != want {
+		t.Errorf("MarshalJSON = %s, want %s", string(b), want)
+	}
+}
