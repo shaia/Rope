@@ -4,11 +4,10 @@ import (
 	"testing"
 )
 
-// Helper to create a leaf node with a specific depth for testing.
-// In reality, leaves always have depth 0, but we might need deeply nested structures
-// to trigger rotations.
-// For this test, we will trust NewConcat to verify depth calculations
-// and focusing on testing the Join logic of the Balancer.
+// Helper functions in this test file construct unbalanced trees using NewConcat
+// to simulate scenarios that trigger AVL rotations.
+// While leaves always have Depth 0, we can build deeper Concat structures
+// to test the Join method's rebalancing logic.
 
 func TestAVLBalancer_Join_Basic(t *testing.T) {
 	b := NewAVLBalancer()
