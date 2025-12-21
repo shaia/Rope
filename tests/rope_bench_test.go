@@ -3,9 +3,14 @@ package tests
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/shaia/rope"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // BenchmarkInsertSequential benchmarks appending to the end.
 func BenchmarkInsertSequential(b *testing.B) {
@@ -39,15 +44,19 @@ func BenchmarkBuildLarge(b *testing.B) {
 // BenchmarkRandomEdits simulates a user editing a file.
 func BenchmarkRandomEdits(b *testing.B) {
 	// Setup a large initial rope
-	r := rope.New(generateRandomString(10000))
+	initialLen := 10000
+	r := rope.New(generateRandomString(initialLen))
+	insertText := "x"
+	lenInsert := len(insertText)
 
 	// Pre-generate edits to avoid benchmarking rand() too much
+	// Adjust range to account for rope growth to maintain uniform distribution
 	indices := make([]int, b.N)
 	for i := 0; i < b.N; i++ {
-		indices[i] = rand.Intn(10000)
+		// Valid indices are [0, currentLen] inclusive (for append)
+		currentLen := initialLen + i*lenInsert
+		indices[i] = rand.Intn(currentLen + 1)
 	}
-
-	insertText := "x"
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
