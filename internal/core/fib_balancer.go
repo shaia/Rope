@@ -7,10 +7,18 @@ package core
 var fibs []int
 
 func init() {
-	// Precompute enough fibs for practical rope depths (e.g., depth 90 covers absurdly large ropes).
+	// Precompute fib numbers up to the max value of int.
+	// On 64-bit systems, this goes up to index 91 (fib[91] fits in int64).
+	// On 32-bit systems, likely index 46.
 	fibs = []int{0, 1}
-	for i := 2; i < 90; i++ {
-		fibs = append(fibs, fibs[i-1]+fibs[i-2])
+	for i := 2; ; i++ {
+		next := fibs[i-1] + fibs[i-2]
+		// Check for overflow. Since we are adding positive numbers,
+		// result < prev indicates wrap-around (overflow).
+		if next < fibs[i-1] {
+			break
+		}
+		fibs = append(fibs, next)
 	}
 }
 
