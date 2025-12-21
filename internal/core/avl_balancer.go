@@ -30,7 +30,7 @@ func (b *AVLBalancer) Join(left, right Node) Node {
 		lC, ok := left.(*Concat)
 		if !ok {
 			// Should not happen if depths are correct for leaves vs concats
-			// But strictly speaking, a Leaf has depth 1.
+			// strictly speaking, a Leaf has depth 0.
 			return NewConcat(left, right)
 		}
 
