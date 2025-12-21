@@ -71,14 +71,53 @@ func TestFibBalancer_RebalanceTrigger(t *testing.T) {
 
 func TestFibBalancer_NoRebalanceNeeded(t *testing.T) {
 	// Verify that it DOESN'T rebalance when not needed.
-	// Difficult to test "internal logic didn't run", but we can check result structure or simply
-	// assume if performance/correctness is fine.
-	// Or: manually create a specific depth/len combo that is valid in Fib but invalid in AVL?
+	// We verify a tree that satisfies Fib invariants (Len >= Fib(Depth+2))
+	// but violates AVL invariants (|dL - dR| > 1).
 
-	// AVL strict: |dL - dR| <= 1.
-	// Fib: Depth restriction is looser.
+	// Construct the tree:
+	// Left: Depth 2, Len 3. Structure: ((a,b), c)
+	// Right: Depth 0, Len 3. Structure: "def"
+	// Total: Depth 3, Len 6.
+	// Fib check: Depth 3 requires Len >= Fib(5)=5.
+	// We have Len 6. So it should NOT rebalance.
+	// AVL check: |2 - 0| = 2 > 1. It WOULD rebalance in AVL.
 
-	// Example:
-	// Tree satisfying Fib but not AVL.
-	// Not easily constructible via PUBLIC Join API which enforces invariants.
+	l1 := NewLeaf("a")
+	l2 := NewLeaf("b")
+	l3 := NewLeaf("c")
+
+	c1 := NewConcat(l1, l2)   // Depth 1, Len 2
+	left := NewConcat(c1, l3) // Depth 2, Len 3
+
+	right := NewLeaf("def") // Depth 0, Len 3
+
+	b := NewFibonacciBalancer()
+
+	// Act
+	root := b.Join(left, right)
+
+	// Assert
+	// 1. Check Depth is 3 (1 + max(2,0))
+	if root.Depth() != 3 {
+		t.Errorf("Expected Depth 3, got %d", root.Depth())
+	}
+
+	// 2. Check Len
+	if root.Len() != 6 {
+		t.Errorf("Expected Len 6, got %d", root.Len())
+	}
+
+	// 3. Verify it is structurally just Concat(left, right)
+	// If it rebalanced, the structure would change (likely rotation).
+	cRoot, ok := root.(*Concat)
+	if !ok {
+		t.Fatalf("Expected Concat node")
+	}
+
+	if cRoot.Left != left {
+		t.Error("Balancer rebalanced (Left child changed) but shouldn't have")
+	}
+	if cRoot.Right != right {
+		t.Error("Balancer rebalanced (Right child changed) but shouldn't have")
+	}
 }
