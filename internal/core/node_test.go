@@ -242,3 +242,107 @@ func TestConcat_MarshalJSON(t *testing.T) {
 		t.Errorf("MarshalJSON = %s, want %s", string(b), want)
 	}
 }
+
+func TestLeaf_Lines(t *testing.T) {
+	tests := []struct {
+		val  string
+		want int
+	}{
+		{"", 0},
+		{"hello", 0},
+		{"hello\n", 1},
+		{"\n", 1},
+		{"a\nb\nc", 2},
+		{"\n\n\n", 3},
+	}
+	for _, tt := range tests {
+		l := NewLeaf(tt.val)
+		if got := l.Lines(); got != tt.want {
+			t.Errorf("Leaf(%q).Lines() = %d, want %d", tt.val, got, tt.want)
+		}
+	}
+}
+
+func TestConcat_Lines(t *testing.T) {
+	// "one\n" (1) + "two\nthree" (1) = 2 lines
+	l1 := NewLeaf("one\n")
+	l2 := NewLeaf("two\nthree")
+	c := NewConcat(l1, l2)
+
+	if got := c.Lines(); got != 2 {
+		t.Errorf("Concat lines = %d, want 2", got)
+	}
+
+	// Complex tree
+	//       .
+	//      / \
+	//     .   \n (1)
+	//    / \
+	//   a   \n (1)
+	l3 := NewLeaf("\n")
+	l4 := NewLeaf("a")
+	l5 := NewLeaf("\n")
+
+	c2 := NewConcat(l4, l5) // 1 line
+	c3 := NewConcat(c2, l3) // 1 + 1 = 2 lines
+
+	if got := c3.Lines(); got != 2 {
+		t.Errorf("Complex Concat lines = %d, want 2", got)
+	}
+}
+
+func TestSlice_Lines(t *testing.T) {
+	// "a\nb\nc\nd" -> 3 newlines
+	// Indices:
+	// 0: a
+	// 1: \n
+	// 2: b
+	// 3: \n
+	// 4: c
+	// 5: \n
+	// 6: d
+
+	s := "a\nb\nc\nd"
+	l := NewLeaf(s)
+
+	// Slice "b\nc" -> indices 2 to 5.
+	// 0123456
+	// Slice(2, 5) -> "b\nc". Contains 1 newline.
+
+	slice := l.Slice(2, 5)
+	if slice.Lines() != 1 {
+		t.Errorf("Slice lines = %d, want 1", slice.Lines())
+	}
+
+	// Slice across concat boundary
+	// L1: "a\n"
+	// L2: "b\n"
+	// Concat(L1, L2) -> "a\nb\n"
+	// Slice(1, 4) -> "\nb\n" -> 2 newlines
+
+	c := NewConcat(NewLeaf("a\n"), NewLeaf("b\n"))
+	// 0: a, 1: \n, 2: b, 3: \n
+	// Slice 1 to 4: indices 1, 2, 3 -> "\nb\n"
+
+	slice2 := c.Slice(1, 4)
+	if slice2.String() != "\nb\n" {
+		t.Fatalf("Slice content mismatch: %q", slice2.String())
+	}
+	if slice2.Lines() != 2 {
+		t.Errorf("Concat Slice lines = %d, want 2", slice2.Lines())
+	}
+}
+
+func TestTryMergeLeaves_Lines(t *testing.T) {
+	l1 := NewLeaf("a\n") // 1 line
+	l2 := NewLeaf("b\n") // 1 line
+
+	merged, ok := TryMergeLeaves(l1, l2)
+	if !ok {
+		t.Fatal("Expected merge")
+	}
+
+	if merged.Lines() != 2 {
+		t.Errorf("Merged lines = %d, want 2", merged.Lines())
+	}
+}

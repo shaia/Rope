@@ -1,6 +1,9 @@
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // Node represents a node in the immutable rope.
 // It matches the public interface but is defined here to allow internal types to refer to it.
@@ -10,6 +13,7 @@ type Node interface {
 	Slice(start, end int) Node
 	String() string
 	Depth() int
+	Lines() int
 }
 
 // --------------------------------------------------------
@@ -18,12 +22,16 @@ type Node interface {
 
 // Leaf represents a leaf node containing a string segment.
 type Leaf struct {
-	val string
+	val   string
+	lines int
 }
 
 // NewLeaf creates a new leaf node.
 func NewLeaf(s string) *Leaf {
-	return &Leaf{val: s}
+	return &Leaf{
+		val:   s,
+		lines: strings.Count(s, "\n"),
+	}
 }
 
 func (l *Leaf) Len() int {
@@ -42,6 +50,10 @@ func (l *Leaf) Depth() int {
 	return 0
 }
 
+func (l *Leaf) Lines() int {
+	return l.lines
+}
+
 // MarshalJSON returns the JSON encoding of the leaf's string value.
 func (l *Leaf) MarshalJSON() ([]byte, error) {
 	return json.Marshal(l.val)
@@ -52,7 +64,11 @@ func (l *Leaf) Slice(start, end int) Node {
 		return l
 	}
 	// Bounds check should be handled, or standard Go slice panic will occur
-	return &Leaf{val: l.val[start:end]}
+	sub := l.val[start:end]
+	return &Leaf{
+		val:   sub,
+		lines: strings.Count(sub, "\n"),
+	}
 }
 
 // MaxLeafMergeSize represents the maximum size in bytes for a leaf node created via merging.
@@ -72,7 +88,11 @@ func TryMergeLeaves(left, right Node) (Node, bool) {
 	rLeaf, ok2 := right.(*Leaf)
 
 	if ok1 && ok2 {
-		return NewLeaf(lLeaf.val + rLeaf.val), true
+		mergedVal := lLeaf.val + rLeaf.val
+		return &Leaf{
+			val:   mergedVal,
+			lines: lLeaf.lines + rLeaf.lines, // Optimization: sum counts instead of rescanning
+		}, true
 	}
 
 	return nil, false
@@ -87,6 +107,7 @@ type Concat struct {
 	Left, Right Node
 	length      int
 	depth       int
+	lines       int
 }
 
 // NewConcat creates a new concat node.
@@ -97,6 +118,7 @@ func NewConcat(left, right Node) *Concat {
 		Right:  right,
 		length: left.Len() + right.Len(),
 		depth:  1 + max(left.Depth(), right.Depth()),
+		lines:  left.Lines() + right.Lines(),
 	}
 }
 
@@ -113,6 +135,10 @@ func (c *Concat) Len() int {
 
 func (c *Concat) Depth() int {
 	return c.depth
+}
+
+func (c *Concat) Lines() int {
+	return c.lines
 }
 
 func (c *Concat) String() string {
