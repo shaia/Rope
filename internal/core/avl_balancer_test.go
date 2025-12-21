@@ -5,7 +5,7 @@ import (
 )
 
 // Helper to create a leaf node with a specific depth for testing.
-// In reality, leaves always have depth 1, but we might need deeply nested structures
+// In reality, leaves always have depth 0, but we might need deeply nested structures
 // to trigger rotations.
 // For this test, we will trust NewConcat to verify depth calculations
 // and focusing on testing the Join logic of the Balancer.
@@ -63,14 +63,13 @@ func TestAVLBalancer_Join_Balance(t *testing.T) {
 	// Difference is 2. Should balance.
 
 	n2 := b.Join(leaf("A"), leaf("B")) // Depth 2
-	// n3 was unused, just using n2 for lLeft below
 	// Wait, if AVL is working, adding C to (A,B) might just make it balanced if C is added to the right?
 	// (A,B) + C:
 	// Depth(AB)=2, Depth(C)=1. Diff=1. No rotation needed usually, just new root.
 	// New Root has left=AB(d2), right=C(d1). Depth = 3.
 
-	// Now Join n3 (Depth 3) with n4 (Depth 1) -> D
-	// Left=n3(d3), Right=D(d1). Diff = 2.
+	// Now Join (Depth 3) with (Depth 1) -> D
+	// Left (d3), Right (d1). Diff = 2.
 	// Should trigger rotation.
 
 	// Let's force it.
