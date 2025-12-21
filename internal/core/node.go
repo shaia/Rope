@@ -127,9 +127,6 @@ func (c *Concat) ByteAt(idx int) byte {
 	return c.Right.ByteAt(idx - leftLen)
 }
 
-	return c.Right.ByteAt(idx - leftLen)
-}
-
 // MarshalJSON returns the JSON encoding of the rope's full string content.
 // Note: This may be expensive as it materializes the entire rope into a string.
 func (c *Concat) MarshalJSON() ([]byte, error) {
