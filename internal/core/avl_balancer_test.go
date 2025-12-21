@@ -37,9 +37,9 @@ func TestAVLBalancer_Join_Balance(t *testing.T) {
 	//    / \
 	//   L3 L4
 	//
-	// Depths: L=1.
-	// Concat(L, L) -> depth 2.
-	// Concat(Concat(L,L), L) -> depth 3.
+	// Depths: L=0.
+	// Concat(L, L) -> depth 1.
+	// Concat(Concat(L,L), L) -> depth 2.
 
 	b := NewAVLBalancer()
 
@@ -57,37 +57,37 @@ func TestAVLBalancer_Join_Balance(t *testing.T) {
 	// Left heavy case requiring rotation
 	// We want to join ( (A, B), C ) with D??
 	// No, Join takes two nodes.
-	// Let's try to join a Depth 3 node with a Depth 1 node.
-	// L3 = ((A,B), C) -> Depth 3
-	// R1 = D -> Depth 1
+	// Let's try to join a Depth 2 node with a Depth 0 node.
+	// L3 = ((A,B), C) -> Depth 2
+	// R1 = D -> Depth 0
 	// Difference is 2. Should balance.
 
-	n2 := b.Join(leaf("A"), leaf("B")) // Depth 2
+	n2 := b.Join(leaf("A"), leaf("B")) // Depth 1
 	// Wait, if AVL is working, adding C to (A,B) might just make it balanced if C is added to the right?
 	// (A,B) + C:
-	// Depth(AB)=2, Depth(C)=1. Diff=1. No rotation needed usually, just new root.
-	// New Root has left=AB(d2), right=C(d1). Depth = 3.
+	// Depth(AB)=1, Depth(C)=0. Diff=1. No rotation needed usually, just new root.
+	// New Root has left=AB(d1), right=C(d0). Depth = 2.
 
-	// Now Join (Depth 3) with (Depth 1) -> D
-	// Left (d3), Right (d1). Diff = 2.
+	// Now Join (Depth 2) with (Depth 0) -> D
+	// Left (d2), Right (d0). Diff = 2.
 	// Should trigger rotation.
 
 	// Let's force it.
 	// Left tree:
-	//      . (d3)
+	//      . (d2)
 	//     / \
-	//   (d2) C(d1)
+	//   (d1) C(d0)
 	//   /  \
-	//  A(1) B(1)
-
-	// Right tree: D(1)
+	//  A(0) B(0)
+	//
+	// Right tree: D(0)
 
 	// Join(Left, Right)
-	// dLeft = 3, dRight = 1.
-	// Condition: dLeft > dRight + 1 (3 > 2) -> True.
+	// dLeft = 2, dRight = 0.
+	// Condition: dLeft > dRight + 1 (2 > 1) -> True.
 	// check lC.Right (C) vs lC.Left (AB).
 	// lC is the root of Left. lC.Left is (AB), lC.Right is C.
-	// d(AB)=2, d(C)=1.
+	// d(AB)=1, d(C)=0.
 	// lC.Right is NOT > lC.Left.
 	// Single rotation case.
 
@@ -98,9 +98,9 @@ func TestAVLBalancer_Join_Balance(t *testing.T) {
 	//
 	// NewConcat(lC.Left, NewConcat(lC.Right, r))
 	// Root -> Left=(AB), Right=(C, D)
-	// Depth(AB)=2. Depth(CD)=2.
-	// New Root Depth = 3.
-	// (Previously it would be 4 if we just stuck them together: ((AB)C)D )
+	// Depth(AB)=1. Depth(CD)=1.
+	// New Root Depth = 2.
+	// (Previously it would be 3 if we just stuck them together: ((AB)C)D )
 
 	lLeft := b.Join(n2, leaf("C"))
 	lRight := leaf("D")
