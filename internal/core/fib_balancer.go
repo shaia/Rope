@@ -24,6 +24,14 @@ func NewFibonacciBalancer() *FibonacciBalancer {
 }
 
 func (b *FibonacciBalancer) Join(left, right Node) Node {
+	// Optimization: Handle empty nodes
+	if left.Len() == 0 {
+		return right
+	}
+	if right.Len() == 0 {
+		return left
+	}
+
 	// Optimization: Coalesce small leaves
 	if merged, ok := TryMergeLeaves(left, right); ok {
 		return merged

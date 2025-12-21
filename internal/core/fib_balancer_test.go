@@ -121,3 +121,21 @@ func TestFibBalancer_NoRebalanceNeeded(t *testing.T) {
 		t.Error("Balancer rebalanced (Right child changed) but shouldn't have")
 	}
 }
+
+func TestFibBalancer_Join_Empty(t *testing.T) {
+	b := NewFibonacciBalancer()
+	l := NewLeaf("a")
+	e := NewLeaf("")
+
+	// Join(l, empty) -> l
+	res := b.Join(l, e)
+	if res != l {
+		t.Errorf("Expected left node to be returned directly when joining with empty, got %v", res)
+	}
+
+	// Join(empty, l) -> l
+	res2 := b.Join(e, l)
+	if res2 != l {
+		t.Errorf("Expected right node to be returned directly when joining with empty, got %v", res2)
+	}
+}
