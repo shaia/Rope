@@ -275,7 +275,7 @@ func TestRopeHandle_Concurrency(t *testing.T) {
 		}
 	}
 
-	fmt.Printf("Final Rope Depth: %d\n", final.Depth())
+	t.Logf("Final Rope Depth: %d", final.Depth())
 }
 
 func TestRopeHandle_Snapshot(t *testing.T) {
