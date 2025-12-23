@@ -81,7 +81,11 @@ type container struct {
 }
 
 // NewHandle creates a new thread-safe handle for a Rope.
+// If initial is nil, it handles it as an empty Rope.
 func NewHandle(initial Node) *RopeHandle {
+	if initial == nil {
+		initial = New("")
+	}
 	h := &RopeHandle{}
 	h.value.Store(&container{root: initial})
 	return h
@@ -100,7 +104,11 @@ func (h *RopeHandle) Snapshot() Node {
 }
 
 // Set updates the root of the Rope safely.
+// If n is nil, it sets the rope to be empty.
 func (h *RopeHandle) Set(n Node) {
+	if n == nil {
+		n = New("")
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.value.Store(&container{root: n})
@@ -123,10 +131,7 @@ func (h *RopeHandle) Apply(fn func(Node) Node) Node {
 func (h *RopeHandle) MarshalJSON() ([]byte, error) {
 	// Snapshot the current state
 	snap := h.Snapshot()
-	// Check if the root node is nil (e.g. NewHandle(nil) was called).
-	if snap == nil {
-		return json.Marshal("")
-	}
+
 	// Warning: Materializes full string
 	return json.Marshal(snap.String())
 }
