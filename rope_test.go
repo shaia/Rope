@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestRopeBasics(t *testing.T) {
@@ -222,7 +221,7 @@ func TestRopeHandle_Concurrency(t *testing.T) {
 
 	// N writers appending "a"
 	runners := 100
-	writesPerRunner := 10
+	writesPerRunner := 100
 
 	var wg sync.WaitGroup
 	wg.Add(runners)
@@ -234,10 +233,6 @@ func TestRopeHandle_Concurrency(t *testing.T) {
 				h.Apply(func(n Node) Node {
 					return Join(n, New("a"))
 				})
-				// Small sleep to encourage interleaving
-				if k%2 == 0 {
-					time.Sleep(time.Microsecond)
-				}
 			}
 		}()
 	}
