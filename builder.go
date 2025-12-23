@@ -6,9 +6,14 @@ import (
 	"github.com/shaia/rope/internal/core"
 )
 
-// Balancer matches the core.Balancer interface but exposed publicly.
-// Users can implement this to define custom balancing strategies.
+// Balancer defines a strategy for combining two Rope nodes into a single Node.
+// Implementations can control the structure of the resulting tree, enabling
+// different balancing characteristics (e.g., AVL trees for general use, Fibonacci for append-heavy workloads).
 type Balancer interface {
+	// Join combines the left and right nodes into a new valid Rope Node.
+	// It is responsible for maintaining any invariants associated with the balancing strategy
+	// (e.g., height diffs in AVL). The resulting Node must contain the concatenation of
+	// left's content followed by right's content.
 	Join(left, right Node) Node
 }
 
