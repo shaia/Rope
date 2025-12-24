@@ -35,11 +35,6 @@ func Join(a, b Node) Node {
 	return defaultBuilder.Join(a, b)
 }
 
-// ConcatNodes is the public API for joining nodes.
-func ConcatNodes(a, b Node) Node {
-	return Join(a, b)
-}
-
 // Split cuts the rope at index i, returning two new Ropes.
 func Split(n Node, i int) (Node, Node) {
 	if i == 0 {
