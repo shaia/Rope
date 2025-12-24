@@ -14,6 +14,7 @@ type Node interface {
 	String() string
 	Depth() int
 	Lines() int
+	EachLeaf(fn func(string))
 }
 
 // --------------------------------------------------------
@@ -52,6 +53,10 @@ func (l *Leaf) Depth() int {
 
 func (l *Leaf) Lines() int {
 	return l.lines
+}
+
+func (l *Leaf) EachLeaf(fn func(string)) {
+	fn(l.val)
 }
 
 // MarshalJSON returns the JSON encoding of the leaf's string value.
@@ -139,6 +144,11 @@ func (c *Concat) Depth() int {
 
 func (c *Concat) Lines() int {
 	return c.lines
+}
+
+func (c *Concat) EachLeaf(fn func(string)) {
+	c.Left.EachLeaf(fn)
+	c.Right.EachLeaf(fn)
 }
 
 func (c *Concat) String() string {
