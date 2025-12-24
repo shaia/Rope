@@ -10,7 +10,7 @@ import (
 func TestRopeBasics(t *testing.T) {
 	r1 := New("Hello")
 	r2 := New(" World")
-	r3 := ConcatNodes(r1, r2)
+	r3 := Join(r1, r2)
 
 	if r3.String() != "Hello World" {
 		t.Errorf("Expected 'Hello World', got '%s'", r3.String())
@@ -65,7 +65,7 @@ func TestComplexOps(t *testing.T) {
 	// Construct a deeper tree
 	r := New("")
 	for _, word := range []string{"This", " ", "is", " ", "a", " ", "rope"} {
-		r = ConcatNodes(r, New(word))
+		r = Join(r, New(word))
 	}
 	expected := "This is a rope"
 	if r.String() != expected {
@@ -82,7 +82,7 @@ func TestComplexOps(t *testing.T) {
 	word := "This is a rope "
 	rLarge := New("")
 	for i := 0; i < 20; i++ {
-		rLarge = ConcatNodes(rLarge, New(word))
+		rLarge = Join(rLarge, New(word))
 	}
 	if rLarge.Depth() == 0 {
 		t.Errorf("Expected depth > 0 for large rope (len %d)", rLarge.Len())
@@ -309,7 +309,7 @@ func TestParForEach(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		s := fmt.Sprintf("chunk%d ", i)
 		chunks = append(chunks, s)
-		r = ConcatNodes(r, New(s))
+		r = Join(r, New(s))
 	}
 
 	expectedFull := ""
@@ -384,7 +384,7 @@ func TestParForEach_Large(t *testing.T) {
 	// Simple smoke test for larger tree
 	r := New("init")
 	for i := 0; i < 1000; i++ {
-		r = ConcatNodes(r, New("a"))
+		r = Join(r, New("a"))
 	}
 
 	count := 0
